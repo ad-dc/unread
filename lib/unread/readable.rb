@@ -20,7 +20,7 @@ module Unread
             raise ArgumentError unless obj.is_a?(self)
 
             rm = obj.read_marks.where(:user_id => user.id).first || obj.read_marks.build(:user_id => user.id)
-            rm.timestamp = obj.send(readable_options[:on])
+            rm.timestamp = Time.now()
             rm.save!
           end
         end
@@ -114,6 +114,10 @@ module Unread
         end
       end
 
+      def read_status(user)
+        self.unread?(user) ? "Unread" : "Read"
+      end
+
       def mark_as_read!(options)
         user = options[:for]
         self.class.assert_reader(user)
@@ -121,7 +125,8 @@ module Unread
         ReadMark.transaction do
           if unread?(user)
             rm = read_mark(user) || read_marks.build(:user_id => user.id)
-            rm.timestamp = self.send(readable_options[:on])
+            #rm.timestamp = self.send(readable_options[:on])
+            rm.timestamp = Time.now()
             rm.save!
           end
         end
