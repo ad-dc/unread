@@ -137,7 +137,7 @@ module Unread
         self.class.assert_reader(user)
 
         ReadMark.transaction do
-          self.read_mark(user).delete
+          self.read_mark(user).destroy
         end
       end
 
