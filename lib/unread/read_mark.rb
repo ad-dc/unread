@@ -4,7 +4,7 @@ class ReadMark < ActiveRecord::Base
     attr_accessible :readable_id, :user_id, :readable_type, :timestamp
   end
 
-  validates_presence_of :user_id, :readable_type
+  validates_presence_of :user_id, :readable_type, :readable_id
 
   scope :global, lambda { where(:readable_id => nil) }
   scope :single, lambda { where('readable_id IS NOT NULL') }
