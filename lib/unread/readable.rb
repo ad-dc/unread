@@ -7,6 +7,8 @@ module Unread
 
         if target == :all
           reset_read_marks_for_user(user)
+        elsif target == :first
+          reset_read_marks_for_user_with_time(user)
         elsif target.is_a?(Array)
           mark_array_as_read(target, user)
         else
@@ -20,7 +22,7 @@ module Unread
             raise ArgumentError unless obj.is_a?(self)
 
             rm = obj.read_marks.where(:user_id => user.id).first || obj.read_marks.build(:user_id => user.id)
-            rm.timestamp = Time.now()
+            rm.timestamp = obj.send(readable_options[:on])
             rm.save!
           end
         end
@@ -64,6 +66,19 @@ module Unread
         rm = user.read_mark_global(self) || user.read_marks.build(:readable_type => self.base_class.name)
         rm.timestamp = timestamp - 1.second
         rm.save!
+      end
+
+      def reset_read_marks_for_user_with_time(user)
+        #find the last updated_at
+        if self.readable_options[:new_reader_unread_last]
+          max_time = self.order("updated_at DESC").pluck(:updated_at).first
+          ReadMark.transaction do
+            ReadMark.delete_all :readable_type => self.base_class.name, :user_id => user.id
+            ReadMark.create!    :readable_type => self.base_class.name, :user_id => user.id, :timestamp => max_time - 1.second
+          end
+        else
+          reset_read_marks_for_user(user) 
+        end
       end
 
       def reset_read_marks_for_all
@@ -114,10 +129,6 @@ module Unread
         end
       end
 
-      def read_status(user)
-        self.unread?(user) ? "Unread" : "Read"
-      end
-
       def mark_as_read!(options)
         user = options[:for]
         self.class.assert_reader(user)
@@ -125,19 +136,9 @@ module Unread
         ReadMark.transaction do
           if unread?(user)
             rm = read_mark(user) || read_marks.build(:user_id => user.id)
-            #rm.timestamp = self.send(readable_options[:on])
-            rm.timestamp = Time.now()
+            rm.timestamp = self.send(readable_options[:on])
             rm.save!
           end
-        end
-      end
-
-      def mark_as_unread!(options)
-        user = options[:for]
-        self.class.assert_reader(user)
-
-        ReadMark.transaction do
-          self.read_mark(user).destroy
         end
       end
 
