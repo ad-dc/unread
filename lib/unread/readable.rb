@@ -7,8 +7,8 @@ module Unread
 
         if target == :all
           reset_read_marks_for_user(user)
-        elsif target == :first
-          reset_read_marks_for_user_with_time(user)
+        # elsif target == :first
+        #   reset_read_marks_for_user_with_time(user)
         elsif target.is_a?(Array)
           mark_array_as_read(target, user)
         else
@@ -69,12 +69,15 @@ module Unread
       end
 
       def reset_read_marks_for_user_with_time(user)
-        #find the last updated_at
         if self.readable_options[:new_reader_unread_last]
+          #what column should we look for
           column = self.readable_options[:on]
+          #find the last updated_at on that column
           max_time = self.unscoped.order("#{column} DESC").pluck(column).first
           ReadMark.transaction do
+            #get rid of all the older ones
             ReadMark.delete_all :readable_type => self.base_class.name, :user_id => user.id
+            #make a new one with our max timestamp -1 second, resulting in that last resource being "unread"
             ReadMark.create!    :readable_type => self.base_class.name, :user_id => user.id, :timestamp => max_time - 1.second
           end
         else
@@ -137,7 +140,7 @@ module Unread
         ReadMark.transaction do
           if unread?(user)
             rm = read_mark(user) || read_marks.build(:user_id => user.id)
-            rm.timestamp = self.send(readable_options[:on])
+            rm.timestamp = Time.current
             rm.save!
           end
         end
