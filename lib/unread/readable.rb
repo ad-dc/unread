@@ -7,6 +7,8 @@ module Unread
 
         if target == :all
           reset_read_marks_for_user(user)
+        elsif target == :all_but_most_recent
+          reset_read_marks_for_user(user, get_most_recent_timestamp)
         elsif target.is_a?(Array)
           mark_array_as_read(target, user)
         else
@@ -77,12 +79,17 @@ module Unread
         end
       end
 
-      def reset_read_marks_for_user(user)
+      def get_most_recent_timestamp
+          column = self.readable_options[:on]
+          self.unscoped.order("#{column} DESC").pluck(column).first - 1.second 
+      end
+
+      def reset_read_marks_for_user(user, timestamp = Time.now)
         assert_reader(user)
 
         ReadMark.transaction do
           ReadMark.delete_all :readable_type => self.base_class.name, :user_id => user.id
-          ReadMark.create!    :readable_type => self.base_class.name, :user_id => user.id, :timestamp => Time.current
+          ReadMark.create!    :readable_type => self.base_class.name, :user_id => user.id, :timestamp => timestamp
         end
       end
 
