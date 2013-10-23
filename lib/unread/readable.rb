@@ -71,7 +71,8 @@ module Unread
       def reset_read_marks_for_user_with_time(user)
         #find the last updated_at
         if self.readable_options[:new_reader_unread_last]
-          max_time = self.unscoped.order("updated_at DESC").pluck(:updated_at).first
+          column = self.readable_options[:on]
+          max_time = self.unscoped.order("#{column} DESC").pluck(column).first
           ReadMark.transaction do
             ReadMark.delete_all :readable_type => self.base_class.name, :user_id => user.id
             ReadMark.create!    :readable_type => self.base_class.name, :user_id => user.id, :timestamp => max_time - 1.second
