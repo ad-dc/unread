@@ -14,7 +14,7 @@ module Unread
         # created BEFORE he signed up.
         # Instead, the new user starts with zero unread messages
         (ReadMark.readable_classes || []).each do |klass|
-          klass.mark_as_read! :all, :for => user
+          klass.mark_as_read! :first, :for => user
         end
       end
 
