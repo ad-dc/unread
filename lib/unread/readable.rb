@@ -85,6 +85,7 @@ module Unread
       end
 
       def reset_read_marks_for_user(user, timestamp = Time.now)
+      def reset_read_marks_for_user(user, timestamp = Time.current)
         assert_reader(user)
 
         ReadMark.transaction do
