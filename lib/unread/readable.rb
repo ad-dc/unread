@@ -84,7 +84,6 @@ module Unread
           self.unscoped.order("#{column} DESC").pluck(column).first - 1.second 
       end
 
-      def reset_read_marks_for_user(user, timestamp = Time.now)
       def reset_read_marks_for_user(user, timestamp = Time.current)
         assert_reader(user)
 
@@ -138,6 +137,7 @@ module Unread
       def read_mark(user)
         read_marks.where(:user_id => user.id).first
       end
+
     end
   end
 end
