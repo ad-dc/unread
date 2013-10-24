@@ -81,7 +81,8 @@ module Unread
 
       def get_most_recent_timestamp
           column = self.readable_options[:on]
-          self.unscoped.order("#{column} DESC").pluck(column).first - 1.second 
+          latest = self.unscoped.order("#{column} DESC").pluck(column).first
+          return latest.blank? ? Time.current : latest - 1.second
       end
 
       def reset_read_marks_for_user(user, timestamp = Time.current)
